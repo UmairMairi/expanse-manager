@@ -1,17 +1,25 @@
 import type { Metadata } from "next";
-import { FileText } from "lucide-react";
-import { ComingSoon } from "@/components/coming-soon";
+import { PageHeader } from "@/components/page-header";
+import { requireUser } from "@/services/auth.service";
+import { listInvoices } from "@/services/invoices.service";
+import { listClients } from "@/services/clients.service";
+import { InvoicesView } from "@/features/invoices/components/invoices-view.client";
 
 export const metadata: Metadata = { title: "Invoices" };
 
-export default function InvoicesPage() {
+export default async function InvoicesPage() {
+  const user = await requireUser();
+  const [invoices, clients] = await Promise.all([
+    listInvoices(user.username),
+    listClients(user.username),
+  ]);
   return (
-    <ComingSoon
-      title="Invoices"
-      description="Generate, download, and email PDF invoices."
-      icon={FileText}
-      phase="Phase 2"
-      features={["On-demand PDF generation", "Send via Gmail SMTP", "Auto-link to milestones"]}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        title="Invoices"
+        description="Generate, download as PDF, email to client, mark paid."
+      />
+      <InvoicesView invoices={invoices} clients={clients} />
+    </div>
   );
 }
