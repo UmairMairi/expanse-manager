@@ -1,21 +1,19 @@
 import type { Metadata } from "next";
-import { Sparkles } from "lucide-react";
-import { ComingSoon } from "@/components/coming-soon";
+import { PageHeader } from "@/components/page-header";
+import { requireUser } from "@/services/auth.service";
+import { AiChat } from "@/features/ai/components/chat.client";
 
 export const metadata: Metadata = { title: "AI Assistant" };
 
-export default function AiPage() {
+export default async function AiPage() {
+  await requireUser();
   return (
-    <ComingSoon
-      title="AI Assistant"
-      description="Ask questions about your finances in natural language."
-      icon={Sparkles}
-      phase="Phase 3"
-      features={[
-        "Gemini-powered chat",
-        "Smart expense categorization",
-        "Daily insights + forecasting",
-      ]}
-    />
+    <div className="space-y-4">
+      <PageHeader
+        title="AI Assistant"
+        description="Ask anything about your expenses, income, savings, budgets, clients, and milestones."
+      />
+      <AiChat />
+    </div>
   );
 }

@@ -1,17 +1,23 @@
 import type { Metadata } from "next";
-import { BarChart3 } from "lucide-react";
-import { ComingSoon } from "@/components/coming-soon";
+import { PageHeader } from "@/components/page-header";
+import { requireUser } from "@/services/auth.service";
+import { gatherReport } from "@/services/reports.service";
+import { rangeForPreset } from "@/features/reports/range";
+import { ReportsView } from "@/features/reports/components/reports-view.client";
 
 export const metadata: Metadata = { title: "Reports" };
 
-export default function ReportsPage() {
+export default async function ReportsPage() {
+  const user = await requireUser();
+  const range = rangeForPreset("month");
+  const bundle = await gatherReport(user.username, range);
   return (
-    <ComingSoon
-      title="Reports"
-      description="Custom-range analytics and exports."
-      icon={BarChart3}
-      phase="Phase 2"
-      features={["Date-range picker", "Excel · CSV · PDF exports", "Monthly auto-email reports"]}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        title="Reports"
+        description="Range-based summaries with Excel, CSV, and PDF exports."
+      />
+      <ReportsView initialBundle={bundle} initialPreset="month" />
+    </div>
   );
 }

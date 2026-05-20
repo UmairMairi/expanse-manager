@@ -5,7 +5,9 @@ import { rangeForPreset } from "@/utils/date";
 import { format, parseISO, startOfDay } from "date-fns";
 import { getDashboardOverview } from "@/features/dashboard/queries";
 import { OverviewCards } from "@/features/dashboard/components/overview-cards";
-import { AiInsightsStub } from "@/features/dashboard/components/ai-insights-stub";
+import { AiInsightsPanel } from "@/features/dashboard/components/ai-insights-panel";
+import { getCachedInsights } from "@/ai/insights";
+import { isGeminiConfigured } from "@/ai/gemini";
 import { QuickActions } from "@/features/dashboard/components/quick-actions.client";
 import { ExpenseTrendChart } from "@/features/dashboard/components/expense-trend-chart.client";
 import { CategoryBreakdown } from "@/features/dashboard/components/category-breakdown.client";
@@ -50,6 +52,10 @@ export default async function DashboardPage() {
     .sort((a, b) => b.value - a.value)
     .slice(0, 6);
 
+  const insights = isGeminiConfigured()
+    ? await getCachedInsights(user.username)
+    : null;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -68,7 +74,7 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <AiInsightsStub />
+          <AiInsightsPanel insights={insights} configured={isGeminiConfigured()} />
         </div>
         <QuickActions />
       </div>

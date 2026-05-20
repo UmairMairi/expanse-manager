@@ -35,3 +35,31 @@ jobs:
           JWT_SECRET: ci-placeholder-secret-do-not-use-in-prod
           FIREBASE_PROJECT_ID: ci-placeholder
           FIREBASE_ADMIN_SA_KEY: e30= # base64({}) — never executed in CI build
+
+  firestore-rules:
+    name: Deploy Firestore rules
+    needs: verify
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Skip if FIREBASE_TOKEN secret is absent
+        id: gate
+        run: |
+          if [ -z "${{ secrets.FIREBASE_TOKEN }}" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::FIREBASE_TOKEN secret not set — skipping rules deploy"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Install Firebase CLI
+        if: steps.gate.outputs.skip == 'false'
+        run: npm install -g firebase-tools@latest
+      - name: Deploy Firestore rules
+        if: steps.gate.outputs.skip == 'false'
+        run: |
+          firebase deploy --only firestore:rules \
+            --project "${{ secrets.FIREBASE_PROJECT_ID }}" \
+            --token "${{ secrets.FIREBASE_TOKEN }}" \
+            --non-interactive
