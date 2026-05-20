@@ -7,13 +7,29 @@ import {
   updateExpense as updateExpenseSvc,
   deleteExpense as deleteExpenseSvc,
 } from "@/services/expenses.service";
+import { checkBudgetThreshold } from "@/services/budgets.service";
 import { ExpenseInputSchema } from "@/types/expense";
 import { toAppError, type Result } from "@/lib/errors";
 import type { ExpenseDoc } from "@/types/expense";
+import type { AuthedUser } from "@/services/auth.service";
 
 function bust() {
   revalidatePath("/dashboard");
   revalidatePath("/expenses");
+  revalidatePath("/budgets");
+}
+
+async function maybeCheckBudget(
+  user: AuthedUser,
+  expense: ExpenseDoc,
+): Promise<void> {
+  await checkBudgetThreshold({
+    userId: user.username,
+    recipientEmail: user.email,
+    recipientName: user.name,
+    category: expense.category,
+    currency: expense.currency,
+  });
 }
 
 export async function createExpenseAction(
@@ -23,7 +39,10 @@ export async function createExpenseAction(
     const user = await requireUser();
     const parsed = ExpenseInputSchema.parse(raw);
     const res = await createExpenseSvc(user.username, parsed);
-    if (res.ok) bust();
+    if (res.ok) {
+      bust();
+      await maybeCheckBudget(user, res.data);
+    }
     return res;
   } catch (e) {
     return { ok: false, error: toAppError(e) };
@@ -38,7 +57,10 @@ export async function updateExpenseAction(
     const user = await requireUser();
     const parsed = ExpenseInputSchema.parse(raw);
     const res = await updateExpenseSvc(user.username, id, parsed);
-    if (res.ok) bust();
+    if (res.ok) {
+      bust();
+      await maybeCheckBudget(user, res.data);
+    }
     return res;
   } catch (e) {
     return { ok: false, error: toAppError(e) };
