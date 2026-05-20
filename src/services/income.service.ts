@@ -40,17 +40,30 @@ export async function listIncome(
   userId: string,
   options: { limit?: number; from?: Date; to?: Date } = {},
 ): Promise<IncomeDoc[]> {
-  let query = getDb()
+  // Single-field filter; sort + date-range filter in JS to avoid composite-index requirement.
+  const snap = await getDb()
     .collection(COLLECTIONS.INCOME)
     .where("userId", "==", userId)
-    .orderBy("date", "desc");
+    .get();
 
-  if (options.from) query = query.where("date", ">=", Timestamp.fromDate(options.from));
-  if (options.to) query = query.where("date", "<=", Timestamp.fromDate(options.to));
-  if (options.limit) query = query.limit(options.limit);
+  const fromMs = options.from?.getTime();
+  const toMs = options.to?.getTime();
 
-  const snap = await query.get();
-  return snap.docs.map((d) => toDoc(d.data() as Stored));
+  let docs = snap.docs.map((d) => toDoc(d.data() as Stored));
+
+  if (fromMs !== undefined || toMs !== undefined) {
+    docs = docs.filter((d) => {
+      const t = new Date(d.date).getTime();
+      if (fromMs !== undefined && t < fromMs) return false;
+      if (toMs !== undefined && t > toMs) return false;
+      return true;
+    });
+  }
+
+  docs.sort((a, b) => b.date.localeCompare(a.date));
+
+  if (options.limit) docs = docs.slice(0, options.limit);
+  return docs;
 }
 
 export async function createIncome(

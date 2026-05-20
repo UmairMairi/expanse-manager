@@ -21,9 +21,9 @@ loadEnv({ path: ".env.local" });
 loadEnv({ path: ".env" });
 
 const DEFAULTS = {
-  username: "Chamption.studio",
-  email: "union.dev10@gmail.com",
-  name: "Umair Asim",
+  username: "Admin",
+  email: "admin@manager.com",
+  name: "Admin",
 };
 
 async function main() {

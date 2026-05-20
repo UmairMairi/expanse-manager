@@ -53,17 +53,32 @@ export async function listExpenses(
   userId: string,
   options: { limit?: number; from?: Date; to?: Date } = {},
 ): Promise<ExpenseDoc[]> {
-  let query = getDb()
+  // Single-field filter only (auto-indexed). Date filter + sort happen in JS
+  // to avoid the composite-index requirement Firestore would otherwise enforce
+  // on `where + orderBy` across different fields.
+  const snap = await getDb()
     .collection(COLLECTIONS.EXPENSES)
     .where("userId", "==", userId)
-    .orderBy("date", "desc");
+    .get();
 
-  if (options.from) query = query.where("date", ">=", Timestamp.fromDate(options.from));
-  if (options.to) query = query.where("date", "<=", Timestamp.fromDate(options.to));
-  if (options.limit) query = query.limit(options.limit);
+  const fromMs = options.from?.getTime();
+  const toMs = options.to?.getTime();
 
-  const snap = await query.get();
-  return snap.docs.map((d) => toDoc(d.data() as Stored));
+  let docs = snap.docs.map((d) => toDoc(d.data() as Stored));
+
+  if (fromMs !== undefined || toMs !== undefined) {
+    docs = docs.filter((d) => {
+      const t = new Date(d.date).getTime();
+      if (fromMs !== undefined && t < fromMs) return false;
+      if (toMs !== undefined && t > toMs) return false;
+      return true;
+    });
+  }
+
+  docs.sort((a, b) => b.date.localeCompare(a.date));
+
+  if (options.limit) docs = docs.slice(0, options.limit);
+  return docs;
 }
 
 export async function getExpense(
