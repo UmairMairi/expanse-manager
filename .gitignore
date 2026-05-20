@@ -47,8 +47,9 @@ next-env.d.ts
 /test-results
 /coverage
 
-# Firebase secrets
+# Firebase secrets — any service-account JSON, anywhere in the tree
 serviceAccountKey*.json
+*firebase-adminsdk*.json
 firebase-debug.log
 
 # editor

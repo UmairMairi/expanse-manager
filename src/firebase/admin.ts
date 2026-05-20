@@ -1,4 +1,6 @@
-import "server-only";
+// Note: `firebase-admin` itself is server-only — it cannot run in a browser.
+// We deliberately do not import "server-only" here so the seed-admin tsx script
+// (which runs outside the Next.js graph) can use this module directly.
 import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 import { readFileSync } from "node:fs";

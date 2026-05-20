@@ -1,6 +1,5 @@
 import "server-only";
 import { cookies } from "next/headers";
-import bcrypt from "bcryptjs";
 import { Timestamp } from "firebase-admin/firestore";
 import { getDb } from "@/firebase/admin";
 import { COLLECTIONS } from "@/firebase/schema";
@@ -13,14 +12,13 @@ import {
   rateLimited,
   internal,
 } from "@/lib/errors";
+import { verifyPassword } from "@/lib/password";
 import {
   SESSION_COOKIE_NAME,
   signSession,
   verifySession,
   type SessionClaims,
 } from "@/utils/jwt";
-
-const BCRYPT_COST = 12;
 
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const RATE_LIMIT_MAX_ATTEMPTS = 5;
@@ -41,11 +39,6 @@ export type AuthedUser = {
   email: string;
   role: "admin";
 };
-
-/** Hash a password with bcrypt (cost 12). */
-export function hashPassword(plain: string): Promise<string> {
-  return bcrypt.hash(plain, BCRYPT_COST);
-}
 
 /**
  * Server-side current-user accessor for Server Components, Server Actions,
@@ -116,7 +109,7 @@ export async function authenticate(
     return err(unauthorized("Invalid username or password"));
   }
   const stored = snap.data() as StoredUser;
-  const matches = await bcrypt.compare(password, stored.passwordHash);
+  const matches = await verifyPassword(password, stored.passwordHash);
   if (!matches) {
     return err(unauthorized("Invalid username or password"));
   }

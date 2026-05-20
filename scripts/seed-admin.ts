@@ -15,7 +15,7 @@ import { config as loadEnv } from "dotenv";
 import { Timestamp } from "firebase-admin/firestore";
 import { getDb } from "../src/firebase/admin";
 import { COLLECTIONS } from "../src/firebase/schema";
-import { hashPassword } from "../src/services/auth.service";
+import { hashPassword } from "../src/lib/password";
 
 loadEnv({ path: ".env.local" });
 loadEnv({ path: ".env" });
