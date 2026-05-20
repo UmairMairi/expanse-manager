@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
-import { Users } from "lucide-react";
-import { ComingSoon } from "@/components/coming-soon";
+import { PageHeader } from "@/components/page-header";
+import { requireUser } from "@/services/auth.service";
+import { getClientSummaries } from "@/services/clients.service";
+import { ClientsView } from "@/features/clients/components/clients-view.client";
 
 export const metadata: Metadata = { title: "Clients" };
 
-export default function ClientsPage() {
+export default async function ClientsPage() {
+  const user = await requireUser();
+  const summaries = await getClientSummaries(user.username);
   return (
-    <ComingSoon
-      title="Clients"
-      description="Track clients, projects, and payment milestones."
-      icon={Users}
-      phase="Phase 2"
-      features={[
-        "Clients with projects + milestones",
-        "Milestone → invoice + income auto-link",
-        "Outstanding milestones dashboard widget",
-      ]}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        title="Clients"
+        description="Track clients, projects, and payment milestones."
+      />
+      <ClientsView summaries={summaries} />
+    </div>
   );
 }
