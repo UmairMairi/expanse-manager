@@ -1,0 +1,20 @@
+rules_version = '2';
+
+// =================================================================
+// Default-deny rules.
+//
+// This app does not use the Firebase client SDK. All reads and writes
+// flow through Next.js Server Actions / route handlers using the
+// firebase-admin SDK on the server, which BYPASSES these rules.
+//
+// These rules exist as defense-in-depth — if anyone ever points a
+// client SDK at this project, they hit a hard wall.
+// =================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
