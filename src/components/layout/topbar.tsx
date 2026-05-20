@@ -21,14 +21,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { AuthedUser } from "@/services/auth.service";
+import type { NotificationDoc } from "@/services/notifications.service";
+import { NotificationsBell } from "@/features/notifications/components/notifications-bell.client";
 
 type Props = {
   user: AuthedUser;
+  notifications: NotificationDoc[];
+  unreadCount: number;
   onOpenPalette: () => void;
   onOpenMobileNav: () => void;
 };
 
-export function Topbar({ user, onOpenPalette, onOpenMobileNav }: Props) {
+export function Topbar({
+  user,
+  notifications,
+  unreadCount,
+  onOpenPalette,
+  onOpenMobileNav,
+}: Props) {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
 
@@ -64,6 +74,7 @@ export function Topbar({ user, onOpenPalette, onOpenMobileNav }: Props) {
       </Button>
 
       <div className="ml-auto flex items-center gap-1">
+        <NotificationsBell notifications={notifications} unreadCount={unreadCount} />
         <Tooltip>
           <TooltipTrigger
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}

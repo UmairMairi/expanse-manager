@@ -7,12 +7,16 @@ import { Topbar } from "./topbar";
 import { CommandPalette } from "@/components/command-palette.client";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts.client";
 
+import type { NotificationDoc } from "@/services/notifications.service";
+
 type Props = {
   user: AuthedUser;
+  notifications: NotificationDoc[];
+  unreadCount: number;
   children: React.ReactNode;
 };
 
-export function AppShell({ user, children }: Props) {
+export function AppShell({ user, notifications, unreadCount, children }: Props) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -22,6 +26,8 @@ export function AppShell({ user, children }: Props) {
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar
           user={user}
+          notifications={notifications}
+          unreadCount={unreadCount}
           onOpenPalette={() => setPaletteOpen(true)}
           onOpenMobileNav={() => setMobileNavOpen(true)}
         />
