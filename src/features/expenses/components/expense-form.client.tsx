@@ -34,8 +34,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  DEFAULT_CATEGORIES,
-  PAYMENT_METHODS,
   ExpenseInputSchema,
   type ExpenseInput,
   type ExpenseDoc,
@@ -61,9 +59,21 @@ export function ExpenseForm({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [tagInput, setTagInput] = useState("");
-  // Merge built-in + user-added, dedupe, built-in first.
-  const categoryOptions = Array.from(new Set([...DEFAULT_CATEGORIES, ...customCategories]));
-  const paymentOptions = Array.from(new Set([...PAYMENT_METHODS, ...customPaymentMethods]));
+  // Only user-defined options. When editing an expense whose category or
+  // payment method isn't in the user's lists (e.g. a built-in seeded value
+  // from an earlier version), include it so the form can still load.
+  const categoryOptions = Array.from(
+    new Set(
+      existing?.category ? [existing.category, ...customCategories] : customCategories,
+    ),
+  );
+  const paymentOptions = Array.from(
+    new Set(
+      existing?.paymentMethod
+        ? [existing.paymentMethod, ...customPaymentMethods]
+        : customPaymentMethods,
+    ),
+  );
 
   const form = useForm<ExpenseInput>({
     resolver: zodResolver(ExpenseInputSchema),
@@ -84,9 +94,9 @@ export function ExpenseForm({
           title: "",
           amountMajor: 0,
           currency: DEFAULT_CURRENCY,
-          category: "Miscellaneous",
+          category: customCategories[0] ?? "",
           date: format(new Date(), "yyyy-MM-dd"),
-          paymentMethod: "card",
+          paymentMethod: customPaymentMethods[0] ?? "",
           notes: "",
           tags: [],
           recurrence: null,
@@ -146,6 +156,9 @@ export function ExpenseForm({
 
   const tags = form.watch("tags") ?? [];
 
+  const needsCategories = categoryOptions.length === 0;
+  const needsMethods = paymentOptions.length === 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -155,6 +168,21 @@ export function ExpenseForm({
             Record an expense with category, date, and payment method.
           </DialogDescription>
         </DialogHeader>
+        {needsCategories || needsMethods ? (
+          <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-900 dark:text-amber-200">
+            You haven&apos;t added any{" "}
+            {needsCategories && needsMethods
+              ? "categories or payment methods"
+              : needsCategories
+                ? "categories"
+                : "payment methods"}{" "}
+            yet.{" "}
+            <a href="/settings" className="font-medium underline underline-offset-2">
+              Add them in Settings
+            </a>{" "}
+            so they show up in the dropdowns.
+          </div>
+        ) : null}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
