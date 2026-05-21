@@ -24,8 +24,20 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { createClientAction, updateClientAction } from "../actions";
-import { ClientSchema, type ClientInput } from "../schemas";
+import {
+  ClientSchema,
+  CLIENT_SOURCES,
+  CLIENT_SOURCE_LABELS,
+  type ClientInput,
+} from "../schemas";
 import type { ClientDoc } from "@/services/clients.service";
 
 type Props = {
@@ -43,13 +55,22 @@ export function ClientDialog({ open, onOpenChange, client }: Props) {
     defaultValues: client
       ? {
           name: client.name,
+          source: client.source,
           email: client.email ?? "",
           phone: client.phone ?? "",
           address: client.address ?? "",
           taxId: client.taxId ?? "",
           notes: client.notes ?? "",
         }
-      : { name: "", email: "", phone: "", address: "", taxId: "", notes: "" },
+      : {
+          name: "",
+          source: "direct",
+          email: "",
+          phone: "",
+          address: "",
+          taxId: "",
+          notes: "",
+        },
   });
 
   function handleSubmit(values: ClientInput) {
@@ -80,19 +101,45 @@ export function ClientDialog({ open, onOpenChange, client }: Props) {
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Acme Inc." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-[1fr_140px] gap-3">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Acme Inc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="source"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Source</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CLIENT_SOURCES.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {CLIENT_SOURCE_LABELS[s]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <FormField
                 control={form.control}

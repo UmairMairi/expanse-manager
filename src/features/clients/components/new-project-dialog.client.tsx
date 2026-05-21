@@ -28,7 +28,10 @@ import { createProjectAction, createClientAction } from "../actions";
 import {
   PROJECT_STATUSES,
   PROJECT_CURRENCIES,
+  CLIENT_SOURCES,
+  CLIENT_SOURCE_LABELS,
   type ProjectStatus,
+  type ClientSource,
 } from "../schemas";
 import type { ClientDoc } from "@/services/clients.service";
 
@@ -49,6 +52,7 @@ export function NewProjectDialog({ open, onOpenChange, clients }: Props) {
 
   // Inline new-client fields
   const [newClientName, setNewClientName] = useState("");
+  const [newClientSource, setNewClientSource] = useState<ClientSource>("direct");
   const [newClientEmail, setNewClientEmail] = useState("");
   const [newClientPhone, setNewClientPhone] = useState("");
 
@@ -67,6 +71,7 @@ export function NewProjectDialog({ open, onOpenChange, clients }: Props) {
       // Reset when dialog closes
       setClientPick(clients[0]?.id ?? NEW_CLIENT_SENTINEL);
       setNewClientName("");
+      setNewClientSource("direct");
       setNewClientEmail("");
       setNewClientPhone("");
       setName("");
@@ -99,6 +104,7 @@ export function NewProjectDialog({ open, onOpenChange, clients }: Props) {
         if (useNewClient) {
           const created = await createClientAction({
             name: newClientName.trim(),
+            source: newClientSource,
             email: newClientEmail.trim() || undefined,
             phone: newClientPhone.trim() || undefined,
           });
@@ -186,13 +192,35 @@ export function NewProjectDialog({ open, onOpenChange, clients }: Props) {
                   </Button>
                 ) : null}
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Name *</Label>
-                <Input
-                  placeholder="Acme Inc."
-                  value={newClientName}
-                  onChange={(e) => setNewClientName(e.target.value)}
-                />
+              <div className="grid grid-cols-[1fr_140px] gap-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Name *</Label>
+                  <Input
+                    placeholder="Acme Inc."
+                    value={newClientName}
+                    onChange={(e) => setNewClientName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Source</Label>
+                  <Select
+                    value={newClientSource}
+                    onValueChange={(v) =>
+                      setNewClientSource((v ?? "direct") as ClientSource)
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CLIENT_SOURCES.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {CLIENT_SOURCE_LABELS[s]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1.5">

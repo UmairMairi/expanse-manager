@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { ProjectDialog } from "./project-dialog.client";
 import { deleteProjectAction } from "../actions";
 import type { ClientDoc, ProjectDoc } from "@/services/clients.service";
-import type { ProjectStatus } from "../schemas";
+import { CLIENT_SOURCE_LABELS, type ProjectStatus } from "../schemas";
 
 type Props = {
   client: ClientDoc;
@@ -82,7 +82,12 @@ export function ClientProjectsView({ client, projects }: Props) {
       </div>
 
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">{client.name}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-semibold tracking-tight">{client.name}</h1>
+          <Badge variant="outline" className="capitalize">
+            {CLIENT_SOURCE_LABELS[client.source]}
+          </Badge>
+        </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
           {client.email ? <span>{client.email}</span> : null}
           {client.phone ? <span>{client.phone}</span> : null}

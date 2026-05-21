@@ -1,7 +1,25 @@
 import { z } from "zod";
 
+export const CLIENT_SOURCES = [
+  "freelancer",
+  "upwork",
+  "fiverr",
+  "direct",
+  "other",
+] as const;
+export type ClientSource = (typeof CLIENT_SOURCES)[number];
+
+export const CLIENT_SOURCE_LABELS: Record<ClientSource, string> = {
+  freelancer: "Freelancer.com",
+  upwork: "Upwork",
+  fiverr: "Fiverr",
+  direct: "Direct",
+  other: "Other",
+};
+
 export const ClientSchema = z.object({
   name: z.string().min(1, "Name is required").max(120),
+  source: z.enum(CLIENT_SOURCES),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   phone: z.string().max(40).optional(),
   address: z.string().max(300).optional(),

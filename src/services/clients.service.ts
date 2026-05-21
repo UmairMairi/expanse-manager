@@ -22,6 +22,7 @@ export interface ClientDoc {
   id: string;
   userId: string;
   name: string;
+  source: ClientInput["source"];
   email?: string;
   phone?: string;
   address?: string;
@@ -35,6 +36,7 @@ interface ClientStored {
   id: string;
   userId: string;
   name: string;
+  source?: ClientInput["source"];
   email?: string;
   phone?: string;
   address?: string;
@@ -47,6 +49,8 @@ interface ClientStored {
 function toClientDoc(s: ClientStored): ClientDoc {
   return {
     ...s,
+    // Backfill legacy clients written before the source field existed.
+    source: s.source ?? "other",
     createdAt: s.createdAt.toDate().toISOString(),
     updatedAt: s.updatedAt.toDate().toISOString(),
   };
@@ -83,6 +87,7 @@ export async function createClient(
     id,
     userId,
     name: input.name,
+    source: input.source,
     email: input.email || undefined,
     phone: input.phone,
     address: input.address,
@@ -106,6 +111,7 @@ export async function updateClient(
     id,
     userId,
     name: input.name,
+    source: input.source,
     email: input.email || undefined,
     phone: input.phone,
     address: input.address,

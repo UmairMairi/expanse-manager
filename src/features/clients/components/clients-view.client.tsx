@@ -7,6 +7,7 @@ import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/empty-state";
 import {
   AlertDialog,
@@ -21,6 +22,7 @@ import {
 import { formatMoney, money, type Currency } from "@/lib/money";
 import { ClientDialog } from "./client-dialog.client";
 import { deleteClientAction } from "../actions";
+import { CLIENT_SOURCE_LABELS } from "../schemas";
 import type { ClientDoc, ClientSummary } from "@/services/clients.service";
 
 type Props = { summaries: ClientSummary[] };
@@ -76,7 +78,7 @@ export function ClientsView({ summaries }: Props) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {summaries.map((s) => (
           <Card key={s.client.id} className="flex flex-col gap-3 p-4">
-            <div className="flex items-start justify-between">
+            <div className="flex items-start justify-between gap-2">
               <Link
                 href={`/clients/${s.client.id}`}
                 className="text-base font-semibold leading-tight hover:underline"
@@ -87,9 +89,12 @@ export function ClientsView({ summaries }: Props) {
                 {s.activeProjects} active
               </span>
             </div>
-            {s.client.email ? (
-              <p className="text-xs text-muted-foreground">{s.client.email}</p>
-            ) : null}
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <Badge variant="outline" className="text-[10px] font-medium">
+                {CLIENT_SOURCE_LABELS[s.client.source]}
+              </Badge>
+              {s.client.email ? <span>{s.client.email}</span> : null}
+            </div>
 
             <div className="mt-1 grid grid-cols-3 gap-2 text-center">
               <div>
