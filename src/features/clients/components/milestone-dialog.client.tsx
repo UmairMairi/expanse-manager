@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -60,7 +60,15 @@ export function MilestoneDialog({
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [amountText, setAmountText] = useState("");
+  const [amountText, setAmountText] = useState(
+    milestone ? (milestone.amount / 100).toFixed(2) : "",
+  );
+
+  useEffect(() => {
+    if (open) {
+      setAmountText(milestone ? (milestone.amount / 100).toFixed(2) : "");
+    }
+  }, [open, milestone]);
 
   const form = useForm<MilestoneInput>({
     resolver: zodResolver(MilestoneSchema),
@@ -167,17 +175,34 @@ export function MilestoneDialog({
                   </FormItem>
                 )}
               />
-              <FormItem>
-                <FormLabel>Amount</FormLabel>
-                <FormControl>
-                  <Input
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    value={amountText || (milestone ? (milestone.amount / 100).toFixed(2) : "")}
-                    onChange={(e) => setAmountText(e.target.value)}
-                  />
-                </FormControl>
-              </FormItem>
+              <FormField
+                control={form.control}
+                name="amount"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input
+                        inputMode="decimal"
+                        placeholder="0.00"
+                        value={amountText}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setAmountText(v);
+                          const parsed = parseMoney(
+                            v,
+                            form.getValues("currency") as Currency,
+                          );
+                          form.setValue("amount", parsed?.amount ?? 0, {
+                            shouldValidate: true,
+                          });
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <FormField

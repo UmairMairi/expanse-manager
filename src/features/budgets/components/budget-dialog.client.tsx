@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,7 +48,17 @@ type Props = {
 export function BudgetDialog({ open, onOpenChange, budget, knownCategories }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [limitText, setLimitText] = useState("");
+  const [limitText, setLimitText] = useState(
+    budget ? (budget.monthlyLimit / 100).toFixed(2) : "",
+  );
+
+  // When the dialog opens for a different budget (or for "new"), reset
+  // the local limit text so it matches.
+  useEffect(() => {
+    if (open) {
+      setLimitText(budget ? (budget.monthlyLimit / 100).toFixed(2) : "");
+    }
+  }, [open, budget]);
 
   const form = useForm<BudgetInput>({
     resolver: zodResolver(BudgetSchema),
@@ -148,17 +158,33 @@ export function BudgetDialog({ open, onOpenChange, budget, knownCategories }: Pr
                   </FormItem>
                 )}
               />
-              <FormItem>
-                <FormLabel>Monthly limit</FormLabel>
-                <FormControl>
-                  <Input
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    value={limitText || (budget ? (budget.monthlyLimit / 100).toFixed(2) : "")}
-                    onChange={(e) => setLimitText(e.target.value)}
-                  />
-                </FormControl>
-              </FormItem>
+              <FormField
+                control={form.control}
+                name="monthlyLimit"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Monthly limit</FormLabel>
+                    <FormControl>
+                      <Input
+                        inputMode="decimal"
+                        placeholder="0.00"
+                        value={limitText}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setLimitText(v);
+                          // Keep form state in sync so zodResolver validates
+                          // the parsed amount, not the stale default of 0.
+                          const parsed = parseMoney(v, form.getValues("currency") as Currency);
+                          form.setValue("monthlyLimit", parsed?.amount ?? 0, {
+                            shouldValidate: true,
+                          });
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             <FormField

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -46,9 +46,23 @@ type Props = {
 export function SavingsGoalDialog({ open, onOpenChange, goal }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [targetText, setTargetText] = useState("");
-  const [savedText, setSavedText] = useState("");
-  const [monthlyText, setMonthlyText] = useState("");
+  const [targetText, setTargetText] = useState(
+    goal ? (goal.targetAmount / 100).toFixed(2) : "",
+  );
+  const [savedText, setSavedText] = useState(
+    goal ? (goal.savedAmount / 100).toFixed(2) : "",
+  );
+  const [monthlyText, setMonthlyText] = useState(
+    goal?.monthlyTarget ? (goal.monthlyTarget / 100).toFixed(2) : "",
+  );
+
+  useEffect(() => {
+    if (open) {
+      setTargetText(goal ? (goal.targetAmount / 100).toFixed(2) : "");
+      setSavedText(goal ? (goal.savedAmount / 100).toFixed(2) : "");
+      setMonthlyText(goal?.monthlyTarget ? (goal.monthlyTarget / 100).toFixed(2) : "");
+    }
+  }, [open, goal]);
 
   const form = useForm<SavingsGoalInput>({
     resolver: zodResolver(SavingsGoalSchema),
@@ -175,41 +189,92 @@ export function SavingsGoalDialog({ open, onOpenChange, goal }: Props) {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <FormItem>
-                <FormLabel>Target amount</FormLabel>
-                <FormControl>
-                  <Input
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    value={targetText || (goal ? (goal.targetAmount / 100).toFixed(2) : "")}
-                    onChange={(e) => setTargetText(e.target.value)}
-                  />
-                </FormControl>
-              </FormItem>
-              <FormItem>
-                <FormLabel>Saved so far</FormLabel>
-                <FormControl>
-                  <Input
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    value={savedText || (goal ? (goal.savedAmount / 100).toFixed(2) : "")}
-                    onChange={(e) => setSavedText(e.target.value)}
-                  />
-                </FormControl>
-              </FormItem>
+              <FormField
+                control={form.control}
+                name="targetAmount"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Target amount</FormLabel>
+                    <FormControl>
+                      <Input
+                        inputMode="decimal"
+                        placeholder="0.00"
+                        value={targetText}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setTargetText(v);
+                          const parsed = parseMoney(
+                            v,
+                            form.getValues("currency") as Currency,
+                          );
+                          form.setValue("targetAmount", parsed?.amount ?? 0, {
+                            shouldValidate: true,
+                          });
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="savedAmount"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Saved so far</FormLabel>
+                    <FormControl>
+                      <Input
+                        inputMode="decimal"
+                        placeholder="0.00"
+                        value={savedText}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setSavedText(v);
+                          const parsed = parseMoney(
+                            v,
+                            form.getValues("currency") as Currency,
+                          );
+                          form.setValue("savedAmount", parsed?.amount ?? 0, {
+                            shouldValidate: true,
+                          });
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <FormItem>
-              <FormLabel>Monthly target (optional)</FormLabel>
-              <FormControl>
-                <Input
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={monthlyText || (goal?.monthlyTarget ? (goal.monthlyTarget / 100).toFixed(2) : "")}
-                  onChange={(e) => setMonthlyText(e.target.value)}
-                />
-              </FormControl>
-            </FormItem>
+            <FormField
+              control={form.control}
+              name="monthlyTarget"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Monthly target (optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      value={monthlyText}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setMonthlyText(v);
+                        const parsed = parseMoney(
+                          v,
+                          form.getValues("currency") as Currency,
+                        );
+                        form.setValue("monthlyTarget", parsed?.amount ?? 0, {
+                          shouldValidate: true,
+                        });
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
