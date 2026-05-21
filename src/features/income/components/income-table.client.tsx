@@ -129,11 +129,11 @@ export function IncomeTable({ initialIncome }: Props) {
                         <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => setEditing(i)}>
+                        <DropdownMenuItem onClick={() => setEditing(i)}>
                           <Pencil className="mr-2 h-3.5 w-3.5" aria-hidden="true" /> Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onSelect={() => handleDelete(i)}
+                          onClick={() => handleDelete(i)}
                           className="text-destructive focus:text-destructive"
                         >
                           <Trash2 className="mr-2 h-3.5 w-3.5" aria-hidden="true" /> Delete

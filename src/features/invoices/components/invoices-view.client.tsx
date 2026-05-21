@@ -209,24 +209,24 @@ export function InvoicesView({ invoices, clients }: Props) {
                         <MoreHorizontal className="h-4 w-4" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem onSelect={() => downloadPdf(inv)}>
+                        <DropdownMenuItem onClick={() => downloadPdf(inv)}>
                           <Download className="mr-2 h-4 w-4" /> Download PDF
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onSelect={() => emailIt(inv)}
+                          onClick={() => emailIt(inv)}
                           disabled={!client?.email}
                         >
                           <Mail className="mr-2 h-4 w-4" /> Email to client
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         {INVOICE_STATUSES.filter((s) => s !== inv.status).map((s) => (
-                          <DropdownMenuItem key={s} onSelect={() => setStatus(inv, s)}>
+                          <DropdownMenuItem key={s} onClick={() => setStatus(inv, s)}>
                             Mark {s}
                           </DropdownMenuItem>
                         ))}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onSelect={() => {
+                          onClick={() => {
                             setEditing(inv);
                             setEditorOpen(true);
                           }}
@@ -235,7 +235,7 @@ export function InvoicesView({ invoices, clients }: Props) {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
-                          onSelect={() => setDeleting(inv)}
+                          onClick={() => setDeleting(inv)}
                         >
                           Delete
                         </DropdownMenuItem>

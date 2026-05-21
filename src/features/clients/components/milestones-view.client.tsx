@@ -238,13 +238,13 @@ export function MilestonesView({ client, project, milestones }: Props) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
                         {MILESTONE_STATUSES.filter((s) => s !== m.status).map((s) => (
-                          <DropdownMenuItem key={s} onSelect={() => changeStatus(m, s)}>
+                          <DropdownMenuItem key={s} onClick={() => changeStatus(m, s)}>
                             Mark {s}
                           </DropdownMenuItem>
                         ))}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
-                          onSelect={() => {
+                          onClick={() => {
                             setEditing(m);
                             setEditorOpen(true);
                           }}
@@ -253,7 +253,7 @@ export function MilestonesView({ client, project, milestones }: Props) {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-destructive"
-                          onSelect={() => setDeleting(m)}
+                          onClick={() => setDeleting(m)}
                         >
                           Delete
                         </DropdownMenuItem>

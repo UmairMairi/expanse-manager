@@ -108,12 +108,12 @@ export function Topbar({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={() => router.push("/settings")}>
+            <DropdownMenuItem onClick={() => router.push("/settings")}>
               <UserIcon className="mr-2 h-4 w-4" aria-hidden="true" />
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onSelect={handleLogout} className="text-destructive">
+            <DropdownMenuItem onClick={handleLogout} className="text-destructive">
               <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
               Sign out
             </DropdownMenuItem>

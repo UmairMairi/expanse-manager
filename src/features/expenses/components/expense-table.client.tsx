@@ -131,11 +131,11 @@ export function ExpenseTable({ initialExpenses }: Props) {
                         <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={() => setEditing(e)}>
+                        <DropdownMenuItem onClick={() => setEditing(e)}>
                           <Pencil className="mr-2 h-3.5 w-3.5" aria-hidden="true" /> Edit
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onSelect={() => handleDelete(e)}
+                          onClick={() => handleDelete(e)}
                           className="text-destructive focus:text-destructive"
                         >
                           <Trash2 className="mr-2 h-3.5 w-3.5" aria-hidden="true" /> Delete
