@@ -166,15 +166,18 @@ export async function checkBudgetThreshold(args: {
   category: string;
   currency: string;
 }): Promise<void> {
-  const { userId, recipientEmail, recipientName, category, currency } = args;
+  // Entire body wrapped — this is a notification side effect, NEVER let it
+  // throw back to the expense create/update action that called it.
+  try {
+    const { userId, recipientEmail, recipientName, category, currency } = args;
 
-  // Find the budget for this category + currency
-  const budgets = await listBudgets(userId);
-  const budget = budgets.find((b) => b.category === category && b.currency === currency);
-  if (!budget) return;
+    // Find the budget for this category + currency
+    const budgets = await listBudgets(userId);
+    const budget = budgets.find((b) => b.category === category && b.currency === currency);
+    if (!budget) return;
 
-  const range = monthRange();
-  const expenses = await listExpenses(userId, { from: range.from, to: range.to });
+    const range = monthRange();
+    const expenses = await listExpenses(userId, { from: range.from, to: range.to });
   const spent = expenses
     .filter((e) => e.category === category && e.currency === currency)
     .reduce((sum, e) => sum + e.amount, 0);
@@ -199,37 +202,40 @@ export async function checkBudgetThreshold(args: {
       ? `Budget exceeded: ${category} (${monthLabel})`
       : `Budget warning: ${category} at ${Math.round(percent)}%`;
 
-  try {
-    await createNotification({
-      userId,
-      type: crossedThreshold === 100 ? "budget_exceeded" : "budget_warning",
-      title: subject,
-      body: `Your ${category} spend is ${Math.round(percent)}% of the monthly limit.`,
-      href: "/budgets",
-    });
-
-    if (isEmailConfigured()) {
-      await sendEmail({
-        to: recipientEmail,
-        subject,
-        body: BudgetWarningEmail({
-          recipientName,
-          category,
-          monthlyLimit: budget.monthlyLimit,
-          currentSpend: spent,
-          currency,
-          percentUsed: percent,
-          month: monthLabel,
-        }),
+    try {
+      await createNotification({
+        userId,
+        type: crossedThreshold === 100 ? "budget_exceeded" : "budget_warning",
+        title: subject,
+        body: `Your ${category} spend is ${Math.round(percent)}% of the monthly limit.`,
+        href: "/budgets",
       });
-    }
 
-    await getDb()
-      .collection(COLLECTIONS.BUDGETS)
-      .doc(budget.id)
-      .update({ lastNotifiedThreshold: crossedThreshold });
+      if (recipientEmail && isEmailConfigured()) {
+        await sendEmail({
+          to: recipientEmail,
+          subject,
+          body: BudgetWarningEmail({
+            recipientName: recipientName || "there",
+            category,
+            monthlyLimit: budget.monthlyLimit,
+            currentSpend: spent,
+            currency,
+            percentUsed: percent,
+            month: monthLabel,
+          }),
+        });
+      }
+
+      await getDb()
+        .collection(COLLECTIONS.BUDGETS)
+        .doc(budget.id)
+        .update({ lastNotifiedThreshold: crossedThreshold });
+    } catch (error) {
+      logger.error({ error, budgetId: budget.id }, "budget_threshold_notification_failed");
+    }
   } catch (error) {
-    logger.error({ error, budgetId: budget.id }, "budget_threshold_check_failed");
-    // Don't throw — we don't want to fail the expense write because of a notification glitch.
+    // Outer catch: never propagate to the caller.
+    logger.error({ error, args }, "budget_threshold_check_failed");
   }
 }

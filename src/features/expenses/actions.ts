@@ -23,13 +23,18 @@ async function maybeCheckBudget(
   user: AuthedUser,
   expense: ExpenseDoc,
 ): Promise<void> {
-  await checkBudgetThreshold({
-    userId: user.username,
-    recipientEmail: user.email,
-    recipientName: user.name,
-    category: expense.category,
-    currency: expense.currency,
-  });
+  try {
+    await checkBudgetThreshold({
+      userId: user.username,
+      recipientEmail: user.email,
+      recipientName: user.name,
+      category: expense.category,
+      currency: expense.currency,
+    });
+  } catch {
+    // Budget notifications are a side effect; they must never fail an
+    // otherwise-successful expense write.
+  }
 }
 
 export async function createExpenseAction(
