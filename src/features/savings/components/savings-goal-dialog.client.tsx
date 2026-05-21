@@ -61,6 +61,9 @@ export function SavingsGoalDialog({ open, onOpenChange, goal }: Props) {
           deadline: goal.deadline ?? "",
           monthlyTarget: goal.monthlyTarget ?? 0,
           isEmergencyFund: goal.isEmergencyFund,
+          linkedSource: goal.linkedSource ?? "any",
+          linkedPlatform: goal.linkedPlatform ?? "",
+          autoContributePercent: goal.autoContributePercent ?? 0,
           notes: goal.notes ?? "",
         }
       : {
@@ -71,6 +74,9 @@ export function SavingsGoalDialog({ open, onOpenChange, goal }: Props) {
           deadline: "",
           monthlyTarget: 0,
           isEmergencyFund: false,
+          linkedSource: "any" as const,
+          linkedPlatform: "",
+          autoContributePercent: 0,
           notes: "",
         },
   });
@@ -219,6 +225,77 @@ export function SavingsGoalDialog({ open, onOpenChange, goal }: Props) {
                 </FormItem>
               )}
             />
+
+            <div className="space-y-3 rounded-md border border-dashed border-border bg-muted/20 p-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                Tie to an income source (optional)
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <FormField
+                  control={form.control}
+                  name="linkedSource"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Source</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="any">Any source</SelectItem>
+                          <SelectItem value="salary">Salary</SelectItem>
+                          <SelectItem value="freelance">Freelance</SelectItem>
+                          <SelectItem value="direct">Direct payment</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="linkedPlatform"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs">Platform (optional)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Upwork, Xint…" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="autoContributePercent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-xs">
+                      Auto-save % of matching income (0 = manual only)
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={field.value ?? 0}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <p className="text-[11px] text-muted-foreground leading-snug">
+                When you record income that matches the source/platform and currency,
+                this percentage will be added to the goal automatically.
+              </p>
+            </div>
 
             <FormField
               control={form.control}

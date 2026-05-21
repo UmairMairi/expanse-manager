@@ -7,12 +7,14 @@ import {
   updateIncome as updateIncomeSvc,
   deleteIncome as deleteIncomeSvc,
 } from "@/services/income.service";
+import { applyAutoContributions } from "@/services/savings.service";
 import { IncomeInputSchema, type IncomeDoc } from "@/types/income";
 import { toAppError, type Result } from "@/lib/errors";
 
 function bust() {
   revalidatePath("/dashboard");
   revalidatePath("/income");
+  revalidatePath("/savings");
 }
 
 export async function createIncomeAction(raw: unknown): Promise<Result<IncomeDoc>> {
@@ -20,7 +22,16 @@ export async function createIncomeAction(raw: unknown): Promise<Result<IncomeDoc
     const user = await requireUser();
     const parsed = IncomeInputSchema.parse(raw);
     const res = await createIncomeSvc(user.username, parsed);
-    if (res.ok) bust();
+    if (res.ok) {
+      bust();
+      await applyAutoContributions({
+        userId: user.username,
+        source: res.data.source,
+        platform: res.data.platform,
+        currency: res.data.currency,
+        amount: res.data.amount,
+      });
+    }
     return res;
   } catch (e) {
     return { ok: false, error: toAppError(e) };

@@ -41,7 +41,9 @@ export const ExpenseInputSchema = z.object({
   currency: z.enum(SUPPORTED_CURRENCIES as unknown as [string, ...string[]]),
   category: z.string().min(1, "Category is required").max(64),
   date: z.string().min(1, "Date is required"),
-  paymentMethod: z.enum(PAYMENT_METHODS),
+  // Free-form string so user-defined payment methods (e.g. "HBL Debit") work
+  // alongside the built-in defaults from PAYMENT_METHODS.
+  paymentMethod: z.string().min(1, "Payment method is required").max(64),
   notes: z.string().max(2000).optional(),
   tags: z.array(z.string().min(1).max(32)).max(20),
   receiptUrl: z.string().url().optional(),

@@ -18,6 +18,8 @@ export const COLLECTIONS = {
   AI_CONVERSATIONS: "aiConversations",
   AI_USAGE: "aiUsage",
   INSIGHTS: "insights",
+  CATEGORIES: "categories",
+  PAYMENT_METHODS: "paymentMethods",
 } as const;
 
 export type CollectionName = (typeof COLLECTIONS)[keyof typeof COLLECTIONS];

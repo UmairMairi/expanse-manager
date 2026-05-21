@@ -28,9 +28,15 @@ import type { ExpenseDoc } from "@/types/expense";
 
 type Props = {
   initialExpenses: ExpenseDoc[];
+  customCategories?: string[];
+  customPaymentMethods?: string[];
 };
 
-export function ExpenseTable({ initialExpenses }: Props) {
+export function ExpenseTable({
+  initialExpenses,
+  customCategories = [],
+  customPaymentMethods = [],
+}: Props) {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<ExpenseDoc | null>(null);
@@ -155,6 +161,8 @@ export function ExpenseTable({ initialExpenses }: Props) {
           open={!!editing}
           onOpenChange={(o) => !o && setEditing(null)}
           existing={editing}
+          customCategories={customCategories}
+          customPaymentMethods={customPaymentMethods}
         />
       )}
     </div>

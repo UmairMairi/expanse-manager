@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -47,12 +47,23 @@ type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   existing?: ExpenseDoc;
+  customCategories?: string[];
+  customPaymentMethods?: string[];
 };
 
-export function ExpenseForm({ open, onOpenChange, existing }: Props) {
+export function ExpenseForm({
+  open,
+  onOpenChange,
+  existing,
+  customCategories = [],
+  customPaymentMethods = [],
+}: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [tagInput, setTagInput] = useState("");
+  // Merge built-in + user-added, dedupe, built-in first.
+  const categoryOptions = Array.from(new Set([...DEFAULT_CATEGORIES, ...customCategories]));
+  const paymentOptions = Array.from(new Set([...PAYMENT_METHODS, ...customPaymentMethods]));
 
   const form = useForm<ExpenseInput>({
     resolver: zodResolver(ExpenseInputSchema),
@@ -82,16 +93,35 @@ export function ExpenseForm({ open, onOpenChange, existing }: Props) {
         },
   });
 
+  // Register tags so it round-trips through form state cleanly. Without this
+  // explicit register, react-hook-form occasionally drops setValue-only fields
+  // on submit when zodResolver re-parses.
+  useEffect(() => {
+    form.register("tags");
+  }, [form]);
+
   function onSubmit(values: ExpenseInput) {
+    // Pull tags directly from form state (more reliable than the resolved
+    // values for setValue-managed fields) and append any pending input the
+    // user typed but never pressed Enter for.
+    const existingTags = form.getValues("tags") ?? [];
+    const pending = tagInput.trim();
+    const finalTags =
+      pending && !existingTags.includes(pending)
+        ? [...existingTags, pending]
+        : existingTags;
+    const payload: ExpenseInput = { ...values, tags: finalTags };
+
     startTransition(async () => {
       const res = existing
-        ? await updateExpenseAction(existing.id, values)
-        : await createExpenseAction(values);
+        ? await updateExpenseAction(existing.id, payload)
+        : await createExpenseAction(payload);
       if (!res.ok) {
         toast.error(res.error.message);
         return;
       }
       toast.success(existing ? "Expense updated" : "Expense added");
+      setTagInput("");
       onOpenChange(false);
       form.reset();
       router.refresh();
@@ -207,7 +237,7 @@ export function ExpenseForm({ open, onOpenChange, existing }: Props) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {DEFAULT_CATEGORIES.map((c) => (
+                        {categoryOptions.map((c) => (
                           <SelectItem key={c} value={c}>{c}</SelectItem>
                         ))}
                       </SelectContent>
@@ -229,7 +259,7 @@ export function ExpenseForm({ open, onOpenChange, existing }: Props) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {PAYMENT_METHODS.map((m) => (
+                        {paymentOptions.map((m) => (
                           <SelectItem key={m} value={m}>
                             {m.replace("_", " ")}
                           </SelectItem>

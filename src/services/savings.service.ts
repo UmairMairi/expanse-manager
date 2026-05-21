@@ -16,6 +16,9 @@ export interface SavingsGoalDoc {
   deadline?: string;
   monthlyTarget?: number;
   isEmergencyFund: boolean;
+  linkedSource: "any" | "salary" | "freelance" | "direct" | "other";
+  linkedPlatform?: string;
+  autoContributePercent: number;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -31,6 +34,9 @@ interface Stored {
   deadline?: string;
   monthlyTarget?: number;
   isEmergencyFund: boolean;
+  linkedSource?: SavingsGoalDoc["linkedSource"];
+  linkedPlatform?: string;
+  autoContributePercent?: number;
   notes?: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
@@ -39,6 +45,8 @@ interface Stored {
 function toDoc(s: Stored): SavingsGoalDoc {
   return {
     ...s,
+    linkedSource: s.linkedSource ?? "any",
+    autoContributePercent: s.autoContributePercent ?? 0,
     createdAt: s.createdAt.toDate().toISOString(),
     updatedAt: s.updatedAt.toDate().toISOString(),
   };
@@ -86,6 +94,9 @@ export async function createSavingsGoal(
     deadline: input.deadline,
     monthlyTarget: input.monthlyTarget,
     isEmergencyFund: input.isEmergencyFund,
+    linkedSource: input.linkedSource,
+    linkedPlatform: input.linkedPlatform || undefined,
+    autoContributePercent: input.autoContributePercent,
     notes: input.notes,
     createdAt: now,
     updatedAt: now,
@@ -111,6 +122,9 @@ export async function updateSavingsGoal(
     deadline: input.deadline,
     monthlyTarget: input.monthlyTarget,
     isEmergencyFund: input.isEmergencyFund,
+    linkedSource: input.linkedSource,
+    linkedPlatform: input.linkedPlatform || undefined,
+    autoContributePercent: input.autoContributePercent,
     notes: input.notes,
     createdAt: Timestamp.fromDate(new Date(existing.data.createdAt)),
     updatedAt: Timestamp.now(),
@@ -127,6 +141,48 @@ export async function deleteSavingsGoal(
   if (!existing.ok) return existing;
   await getDb().collection(COLLECTIONS.SAVINGS).doc(id).delete();
   return ok(undefined);
+}
+
+/**
+ * When an income record lands, look at every savings goal with autoContributePercent > 0
+ * that matches the income's source/platform and currency, and bump savedAmount by the
+ * configured slice. Failures are swallowed — must never break the income create.
+ */
+export async function applyAutoContributions(args: {
+  userId: string;
+  source: string;
+  platform: string;
+  currency: string;
+  amount: number; // minor units
+}): Promise<void> {
+  try {
+    const goals = await listSavingsGoals(args.userId);
+    for (const goal of goals) {
+      if (!goal.autoContributePercent || goal.autoContributePercent <= 0) continue;
+      if (goal.currency !== args.currency) continue;
+      const linked = goal.linkedSource ?? "any";
+      if (linked !== "any" && linked !== args.source) continue;
+      if (
+        goal.linkedPlatform &&
+        goal.linkedPlatform.trim().toLowerCase() !==
+          args.platform.trim().toLowerCase()
+      ) {
+        continue;
+      }
+      const slice = Math.round((args.amount * goal.autoContributePercent) / 100);
+      if (slice <= 0) continue;
+      const newSaved = goal.savedAmount + slice;
+      await getDb()
+        .collection(COLLECTIONS.SAVINGS)
+        .doc(goal.id)
+        .update({
+          savedAmount: newSaved,
+          updatedAt: Timestamp.now(),
+        });
+    }
+  } catch {
+    // best-effort only — never block the income write
+  }
 }
 
 export async function contributeToGoal(

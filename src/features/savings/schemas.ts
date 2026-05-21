@@ -2,6 +2,14 @@ import { z } from "zod";
 
 export const SAVINGS_CURRENCIES = ["PKR", "USD", "EUR", "GBP", "AED"] as const;
 
+export const SAVINGS_LINKED_SOURCES = [
+  "any",
+  "salary",
+  "freelance",
+  "direct",
+  "other",
+] as const;
+
 export const SavingsGoalSchema = z.object({
   goalName: z.string().min(1, "Goal name is required").max(80),
   targetAmount: z.number().int().positive("Target must be positive"),
@@ -10,6 +18,16 @@ export const SavingsGoalSchema = z.object({
   deadline: z.string().optional(),
   monthlyTarget: z.number().int().min(0).optional(),
   isEmergencyFund: z.boolean(),
+  // Optional linkage to an income stream. "any" means the goal isn't tied to
+  // a specific source. `linkedPlatform` further narrows within a source
+  // (e.g. source="freelance", platform="Upwork").
+  linkedSource: z.enum(SAVINGS_LINKED_SOURCES),
+  linkedPlatform: z.string().max(60).optional(),
+  /**
+   * If set, automatically contribute this percentage of every matching income
+   * record to the goal when the income is created. 0 = manual contributions only.
+   */
+  autoContributePercent: z.number().min(0).max(100),
   notes: z.string().max(500).optional(),
 });
 

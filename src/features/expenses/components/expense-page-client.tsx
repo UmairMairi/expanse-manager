@@ -10,12 +10,17 @@ import type { ExpenseDoc } from "@/types/expense";
 
 type Props = {
   initialExpenses: ExpenseDoc[];
+  customCategories?: string[];
+  customPaymentMethods?: string[];
 };
 
-export function ExpensePageClient({ initialExpenses }: Props) {
+export function ExpensePageClient({
+  initialExpenses,
+  customCategories = [],
+  customPaymentMethods = [],
+}: Props) {
   const [open, setOpen] = useState(false);
 
-  // Listen for the keyboard shortcut / palette action.
   useEffect(() => {
     const handler = () => setOpen(true);
     window.addEventListener("palette:new-expense", handler);
@@ -34,8 +39,17 @@ export function ExpensePageClient({ initialExpenses }: Props) {
           </Button>
         }
       />
-      <ExpenseTable initialExpenses={initialExpenses} />
-      <ExpenseForm open={open} onOpenChange={setOpen} />
+      <ExpenseTable
+        initialExpenses={initialExpenses}
+        customCategories={customCategories}
+        customPaymentMethods={customPaymentMethods}
+      />
+      <ExpenseForm
+        open={open}
+        onOpenChange={setOpen}
+        customCategories={customCategories}
+        customPaymentMethods={customPaymentMethods}
+      />
     </div>
   );
 }
