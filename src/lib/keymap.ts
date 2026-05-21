@@ -40,6 +40,12 @@ export const KEYMAP: ReadonlyArray<KeymapEntry> = [
     target: { type: "navigate", href: "/clients" },
   },
   {
+    keys: "g p",
+    label: "Go to Projects",
+    group: "Navigation",
+    target: { type: "navigate", href: "/projects" },
+  },
+  {
     keys: "g s",
     label: "Go to Savings",
     group: "Navigation",
